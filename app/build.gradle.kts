@@ -30,13 +30,24 @@ android {
         versionCode = project.libs.versions.app.version.versionCode.get().toInt()
     }
 
-    signingConfigs {
-        if (keystorePropertiesFile.exists()) {
-            register("release") {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
+     signingConfigs {
+        create("release") {
+
+            val keystorePath = System.getenv("CM_KEYSTORE_PATH")
+            val keystorePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+            val keyAliasEnv = System.getenv("CM_KEY_ALIAS")
+            val keyPasswordEnv = System.getenv("CM_KEY_PASSWORD")
+
+            if (
+                keystorePath != null &&
+                keystorePassword != null &&
+                keyAliasEnv != null &&
+                keyPasswordEnv != null
+            ) {
+                storeFile = file(keystorePath)
+                storePassword = keystorePassword
+                keyAlias = keyAliasEnv
+                keyPassword = keyPasswordEnv
             }
         }
     }
@@ -46,19 +57,16 @@ android {
         buildConfig = true
     }
 
-    buildTypes {
-        debug {
-            applicationIdSuffix = ".debug"
-        }
+   buildTypes {
         release {
-            isMinifyEnabled = true
+            isMinifyEnabled = false
+
+            signingConfig = signingConfigs.getByName("release")
+
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
                 "proguard-rules.pro"
             )
-            if (keystorePropertiesFile.exists()) {
-                signingConfig = signingConfigs.getByName("release")
-            }
         }
     }
 
