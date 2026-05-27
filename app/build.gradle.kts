@@ -30,13 +30,19 @@ android {
         versionCode = project.libs.versions.app.version.versionCode.get().toInt()
     }
 
-    signingConfigs {
-        if (keystorePropertiesFile.exists()) {
-            register("release") {
-                keyAlias = keystoreProperties.getProperty("keyAlias")
-                keyPassword = keystoreProperties.getProperty("keyPassword")
-                storeFile = file(keystoreProperties.getProperty("storeFile"))
-                storePassword = keystoreProperties.getProperty("storePassword")
+ signingConfigs {
+        create("release") {
+            // Codemagic automatically provides these ENV variables when using android_signing
+            val keystorePath = System.getenv("CM_KEYSTORE_PATH")
+            if (!keystorePath.isNullOrEmpty()) {
+                storeFile = file(keystorePath)
+                storePassword = System.getenv("CM_KEYSTORE_PASSWORD")
+                keyAlias = System.getenv("CM_KEY_ALIAS")
+                keyPassword = System.getenv("CM_KEY_PASSWORD")
+                
+                // Crucial for solving the INSTALL_PARSE_FAILED_NO_CERTIFICATES error
+                enableV1Signing = true
+                enableV2Signing = true
             }
         }
     }
